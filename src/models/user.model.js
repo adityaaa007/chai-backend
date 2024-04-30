@@ -49,6 +49,7 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
+// middleware to create hash of password if its modified or created 
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) next();
 
@@ -56,6 +57,7 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
+// to compare password string with hash stored in db 
 userSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
