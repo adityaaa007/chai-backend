@@ -1,7 +1,10 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import {
+  deleteFromCloudinary,
+  uploadOnCloudinary,
+} from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import mongoose from "mongoose";
 
@@ -245,7 +248,7 @@ const updateAccountDetails = asyncHandler(async (req, res, next) => {
 const updateUserAvatar = asyncHandler(async (req, res, next) => {
   const avatarLocalPath = req.file?.path;
 
-  if (avatarLocalPath) throw new ApiError(400, "Avatar file is missing");
+  if (!avatarLocalPath) throw new ApiError(400, "Avatar file is missing");
 
   const avatar = await uploadOnCloudinary(avatarLocalPath);
 
@@ -254,7 +257,12 @@ const updateUserAvatar = asyncHandler(async (req, res, next) => {
   if (!avatar.url)
     throw new ApiError(500, "Error while uploading avatar to cloudinary");
 
-  const user = User.findByIdAndUpdate(
+  // before updating new avatarUrl delete the old one
+  const oldAvatarUrl = req.user?.avatar;
+  const publicId = oldAvatarUrl?.match(/\/v\d+\/([^/.]+)\.\w+$/)[1];
+  await deleteFromCloudinary(publicId);
+
+  const user = await User.findByIdAndUpdate(
     req.user?._id,
     { $set: { avatar: avatar.url } },
     { new: true }
@@ -268,7 +276,7 @@ const updateUserAvatar = asyncHandler(async (req, res, next) => {
 const updateUserCoverImage = asyncHandler(async (req, res, next) => {
   const coverImageLocalPath = req.file?.path;
 
-  if (coverImageLocalPath)
+  if (!coverImageLocalPath)
     throw new ApiError(400, "coverImage file is missing");
 
   const coverImage = await uploadOnCloudinary(coverImageLocalPath);
@@ -276,7 +284,12 @@ const updateUserCoverImage = asyncHandler(async (req, res, next) => {
   if (!coverImage.url)
     throw new ApiError(500, "Error while uploading coverImage to cloudinary");
 
-  const user = User.findByIdAndUpdate(
+  // before updating new coverImage delete the old one
+  const oldCoverImageUrl = req.user?.coverImage;
+  const publicId = oldCoverImageUrl && oldCoverImageUrl?.match(/\/v\d+\/([^/.]+)\.\w+$/)[1];
+  await deleteFromCloudinary(publicId);
+
+  const user = await User.findByIdAndUpdate(
     req.user?._id,
     { $set: { coverImage: coverImage.url } },
     { new: true }
@@ -364,7 +377,7 @@ const getWatchedHistory = asyncHandler(async (req, res, next) => {
   const user = await User.aggregate([
     {
       $match: {
-        _id: mongoose.Types.ObjectId(req.user._id),
+        _id: new mongoose.Types.ObjectId(req.user._id),
       },
     },
     {
@@ -425,5 +438,5 @@ export {
   updateUserAvatar,
   updateUserCoverImage,
   getUserChannelProfile,
-  getWatchedHistory
+  getWatchedHistory,
 };

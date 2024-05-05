@@ -19,9 +19,24 @@ const uploadOnCloudinary = async (filepath) => {
     fs.unlinkSync(filepath); // delete the file
     return response;
   } catch (error) {
+    console.log("Error while uploading: " + error.message);
     fs.unlinkSync(filepath);
     return null;
   }
 };
 
-export { uploadOnCloudinary };
+const deleteFromCloudinary = async (publicId) => {
+  try {
+    if (!publicId) return null;
+
+    await cloudinary.uploader.destroy(publicId).then((result) => {
+      console.log("successfully deleted file: " + result);
+      return true;
+    });
+  } catch (error) {
+    console.log("Error while uploading: " + error.message);
+    return null;
+  }
+};
+
+export { uploadOnCloudinary, deleteFromCloudinary };
