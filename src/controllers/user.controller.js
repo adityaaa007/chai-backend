@@ -260,7 +260,7 @@ const updateUserAvatar = asyncHandler(async (req, res, next) => {
   // before updating new avatarUrl delete the old one
   const oldAvatarUrl = req.user?.avatar;
   const publicId = oldAvatarUrl?.match(/\/v\d+\/([^/.]+)\.\w+$/)[1];
-  await deleteFromCloudinary(publicId);
+  await deleteFromCloudinary(publicId, 'image');
 
   const user = await User.findByIdAndUpdate(
     req.user?._id,
@@ -287,7 +287,7 @@ const updateUserCoverImage = asyncHandler(async (req, res, next) => {
   // before updating new coverImage delete the old one
   const oldCoverImageUrl = req.user?.coverImage;
   const publicId = oldCoverImageUrl && oldCoverImageUrl?.match(/\/v\d+\/([^/.]+)\.\w+$/)[1];
-  await deleteFromCloudinary(publicId);
+  await deleteFromCloudinary(publicId, 'image');
 
   const user = await User.findByIdAndUpdate(
     req.user?._id,
