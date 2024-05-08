@@ -14,7 +14,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
   let videoQuery = {};
 
-  if (userId) videoQuery.userId = userId;
+  if (userId) videoQuery.owner = userId;
   if (query) {
     videoQuery.$or = [
       { title: { $regex: query, $options: "i" } },
